@@ -1,9 +1,12 @@
 mod perceptron;
 
 use perceptron::Perceptron;
+use rand::{thread_rng, Rng};
+
+const NUM_INPUTS: usize = 20;
 
 pub fn generate_predictions() -> Result<f64, ()> {
-    let random_weights = gen_random_floats()?;
+    let random_weights = gen_random_floats(NUM_INPUTS)?;
     let bias = 1.0;
     let perceptron = Perceptron::new(random_weights, bias);
 
@@ -13,10 +16,14 @@ pub fn generate_predictions() -> Result<f64, ()> {
     Ok(perceptron.feed_forward(input))
 }
 
-fn gen_random_floats() -> Result<Vec<f64>, ()> {
-    let random_floats = vec![0.1, 0.2, 0.3, 0.4, 0.5];
+fn gen_random_floats(number: usize) -> Result<Vec<f64>, ()> {
+    let values: Vec<f64> = (0..number).map(|_| gen_random_float()).collect();
 
-    Ok(random_floats)
+    Ok(values)
+}
+
+fn gen_random_float() -> f64 {
+    thread_rng().gen_range::<f64, _>(0.0..1.0)
 }
 
 #[cfg(test)]
@@ -25,8 +32,8 @@ mod tests {
 
     #[test]
     fn random_floats_are_generated() {
-        let result = gen_random_floats().unwrap();
-        let expected = vec![0.1, 0.3, 0.3, 0.4, 0.5];
-        assert_eq!(result, expected);
+        let expected_length = 5;
+        let actual_length = gen_random_floats(expected_length).unwrap().len();
+        assert_eq!(actual_length, expected_length);
     }
 }

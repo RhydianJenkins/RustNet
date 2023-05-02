@@ -8,13 +8,13 @@ impl Perceptron {
         Perceptron { weights, bias }
     }
 
-    pub fn predict(&self, input: &[f64]) -> f64 {
+    pub fn feed_forward(&self, input: &[f64]) -> f64 {
         let sum: f64 = input
             .iter()
             .zip(self.weights.iter())
             .map(|(x, w)| x * w)
             .sum();
 
-        sum + self.bias
+        (sum + self.bias).sin() // activation function
     }
 }

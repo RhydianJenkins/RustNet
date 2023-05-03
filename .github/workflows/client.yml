@@ -1,0 +1,40 @@
+name: Client CI
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install
+      working-directory: ./client
+      run: npm i
+
+    - name: Build
+      working-directory: ./client
+      run: npm run build
+
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install
+      working-directory: ./client
+      run: npm i
+
+    - name: TS Check
+      working-directory: ./client
+      run: tsc
+
+    - name: Eslint
+      working-directory: ./client
+      run: npm run lint

@@ -4,7 +4,10 @@ import styles from "./App.module.css";
 
 const App: Component = () => {
   return (
-    <h1 class={styles.header}>This is an empty app!</h1>
+    <main class={styles.container}>
+      <h1>Rust Net</h1>
+      <p>TODO canvas and fetch and stuff...</p>
+    </main>
   );
 };
 

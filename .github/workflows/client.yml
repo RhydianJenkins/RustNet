@@ -1,7 +1,5 @@
 name: Client CI
 
-image: node:latest
-
 on:
   push:
     branches: [ "master" ]

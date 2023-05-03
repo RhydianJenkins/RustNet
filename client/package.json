@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "serve": "vite preview",
-    "lint": "eslint . --ext dist"
+    "lint": "eslint ."
   },
   "license": "MIT",
   "devDependencies": {

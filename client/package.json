@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "serve": "vite preview",
-    "lint": "eslint ."
+    "lint": "eslint ./src/**/*.{ts,tsx}"
   },
   "license": "MIT",
   "devDependencies": {

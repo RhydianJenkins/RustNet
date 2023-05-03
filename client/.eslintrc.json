@@ -15,7 +15,7 @@
     "semi": ["error", "always"],
     "quotes": ["error", "double"],
     "indent": ["error", 2],
-    "trailingComma": ["error", "always"],
+    "comma-dangle": ["error", "always-multiline"],
     "space-before-function-paren": ["error", "never"],
     "no-multiple-empty-lines": ["error", { "max": 1, "maxEOF": 0 }]
   }

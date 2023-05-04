@@ -1,4 +1,5 @@
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
+use actix_cors::Cors;
+use actix_web::{get, middleware::Logger, post, web, App, HttpResponse, HttpServer, Responder};
 use neural_network::generate_predictions;
 use serde::Serialize;
 
@@ -23,8 +24,14 @@ async fn test() -> impl Responder {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    HttpServer::new(|| App::new().service(checkhealth).service(test))
-        .bind(("0.0.0.0", 8080))?
-        .run()
-        .await
+    HttpServer::new(|| {
+        App::new()
+            .wrap(Cors::permissive())
+            .wrap(Logger::default())
+            .service(checkhealth)
+            .service(test)
+    })
+    .bind(("0.0.0.0", 8080))?
+    .run()
+    .await
 }

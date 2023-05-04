@@ -1,0 +1,27 @@
+version: "3"
+
+services:
+  client:
+    image: "node:latest"
+    working_dir: /var/www/app
+    volumes:
+      - ./client:/var/www/app
+    ports:
+      - "3000:3000"
+    command: "npm start"
+    networks:
+      - rustnet
+
+  server:
+    image: "rust:1.69"
+    working_dir: /var/www/app
+    volumes:
+      - ./server:/var/www/app
+    ports:
+      - "8080:8080"
+    command: "cargo run"
+    networks:
+      - rustnet
+
+networks:
+  rustnet:

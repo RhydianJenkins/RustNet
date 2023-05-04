@@ -1,10 +1,10 @@
 # Rust backend for the neural network API
 
-## Development
+## Local Development
 
 ```bash
 cargo run
 
 # ... in another window
-curl http://localhost:88080/checkhealth # returns "Hello World!"
+curl http://localhost:8080/checkhealth # returns "Hello World!"
 ```

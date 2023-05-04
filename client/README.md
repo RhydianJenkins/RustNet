@@ -1,6 +1,6 @@
 # Solid Client for RustNet
 
-## Development
+## Local Development
 
 ```bash
 # from this directory

@@ -20,7 +20,7 @@ jobs:
       run: docker-compose run client npm run build
 
     - name: TS Check
-      run: docker-compose run client tsc
+      run: docker-compose run client npm run tsc
 
     - name: Eslint
       run: docker-compose run client npm run lint

@@ -1,3 +1,5 @@
+mod neural_network;
+
 use actix_cors::Cors;
 use actix_web::{get, middleware::Logger, post, web, App, HttpResponse, HttpServer, Responder};
 use neural_network::generate_predictions;

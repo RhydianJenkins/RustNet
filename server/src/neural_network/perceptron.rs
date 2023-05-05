@@ -8,13 +8,26 @@ impl Perceptron {
         Perceptron { weights, bias }
     }
 
-    pub fn feed_forward(&self, input: &[f64]) -> f64 {
+    /*
+     * For every input, multiply that input by its weight.
+     * Sum all of the weighted inputs.
+     * Compute the output of the perceptron based on that sum passed through an activation function
+     * (the sign of the sum).
+     */
+    pub fn feed_forward(&self, input: Vec<f64>) -> f64 {
         let sum: f64 = input
             .iter()
             .zip(self.weights.iter())
             .map(|(x, w)| x * w)
             .sum();
 
-        (sum + self.bias).sin() // activation function
+        self.activate(sum)
+    }
+
+    /*
+     * TODO
+     */
+    fn activate(&self, sum: f64) -> f64 {
+        sum + self.bias
     }
 }

@@ -7,7 +7,7 @@ use serde::Serialize;
 
 #[derive(Serialize)]
 struct ResponseBody {
-    testing: f64,
+    prediction: Vec<f64>,
 }
 
 #[get("/checkhealth")]
@@ -17,10 +17,10 @@ async fn checkhealth() -> impl Responder {
 
 #[post("/test")]
 async fn test() -> impl Responder {
-    let predictions = generate_predictions().unwrap_or(0.0);
+    let predictions = generate_predictions().unwrap();
 
     web::Json(ResponseBody {
-        testing: predictions,
+        prediction: predictions,
     })
 }
 

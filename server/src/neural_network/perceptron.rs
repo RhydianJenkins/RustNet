@@ -1,4 +1,4 @@
-use super::trainer::Trainer;
+use super::training_data::TrainingData;
 
 pub struct Perceptron {
     weights: Vec<f64>,
@@ -32,13 +32,13 @@ impl Perceptron {
         sum + self.bias
     }
 
-    pub fn train(&mut self, trainer: &Trainer) {
-        let guess = self.feed_forward(&trainer.inputs);
-        let error = trainer.desired_answer - guess;
+    pub fn train(&mut self, training_data: &TrainingData) {
+        let guess = self.feed_forward(&training_data.inputs);
+        let error = training_data.desired_answer - guess;
         let weights: Vec<f64> = self
             .weights
             .iter()
-            .zip(trainer.inputs.iter())
+            .zip(training_data.inputs.iter())
             .map(|(w, x)| w + x * error * LEARNING_RATE)
             .collect();
 

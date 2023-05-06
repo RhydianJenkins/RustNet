@@ -1,27 +1,22 @@
+mod connection;
+mod network;
 mod perceptron;
 mod random_float_generator;
-mod trainer;
+mod training_data;
 
-use perceptron::Perceptron;
-use random_float_generator::gen_random_floats;
-use trainer::Trainer;
+use network::Network;
 
-const NUM_INPUTS: usize = 20;
+use self::random_float_generator::gen_random_floats;
 
-pub fn generate_predictions() -> Result<f64, ()> {
-    let random_weights = gen_random_floats(NUM_INPUTS);
-    let bias = 1.0;
-    let mut perceptron = Perceptron::new(random_weights, bias);
+pub fn generate_predictions() -> Result<Vec<f64>, ()> {
+    let network = &mut Network::new();
 
-    // train (TODO loop until error is low enough)
-    for _ in 0..10000 {
-        let trainer = Trainer::new();
-        perceptron.train(&trainer);
-    }
+    network.train(); // TODO no need to train the network every time
 
-    // predict
-    let input = vec![1.0, 2.0];
-    Ok(perceptron.feed_forward(&input))
+    let input = gen_random_floats(2);
+    let predictions = network.feed_forward(&input);
+
+    Ok(predictions)
 }
 
 #[cfg(test)]

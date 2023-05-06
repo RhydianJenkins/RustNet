@@ -1,4 +1,3 @@
-mod connection;
 mod network;
 mod perceptron;
 mod random_float_generator;
@@ -11,10 +10,10 @@ use self::random_float_generator::gen_random_floats;
 pub fn generate_predictions() -> Result<Vec<f64>, ()> {
     let network = &mut Network::new();
 
-    network.train(); // TODO no need to train the network every time
+    let inputs = gen_random_floats(2);
+    network.train(&inputs, -4.0);
 
-    let input = gen_random_floats(2);
-    let predictions = network.feed_forward(&input);
+    let predictions = network.feed_forward(&inputs);
 
     Ok(predictions)
 }

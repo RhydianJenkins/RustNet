@@ -61,36 +61,36 @@ impl Network {
     }
 
     fn back_propagate(&mut self, feed_forward_results: Vec<f64>, desired_answer: f64) {
-        let mut output_back_propagation_results = vec![];
-        let mut hidden_back_propagation_results = vec![];
+        let output_back_propagation_results = self
+            .output_layer
+            .iter_mut()
+            .map(|perceptron| {
+                perceptron.train(&TrainingData {
+                    inputs: &feed_forward_results,
+                    desired_answer,
+                })
+            })
+            .collect::<Vec<f64>>();
 
-        for perceptron in &mut self.output_layer {
-            let output_back_propagation_result = perceptron.train(&TrainingData {
-                inputs: feed_forward_results.clone(),
-                desired_answer,
-            });
-            output_back_propagation_results.push(output_back_propagation_result);
-        }
+        let hidden_back_propagation_results = self
+            .hidden_layer
+            .iter_mut()
+            .map(|perceptron| {
+                perceptron.train(&TrainingData {
+                    inputs: &output_back_propagation_results,
+                    desired_answer,
+                })
+            })
+            .collect::<Vec<f64>>();
 
-        for perceptron in &mut self.hidden_layer {
-            let hidden_back_propagation_result = perceptron.train(&TrainingData {
-                inputs: output_back_propagation_results.clone(),
-                desired_answer,
-            });
-            hidden_back_propagation_results.push(hidden_back_propagation_result);
-        }
-
-        for perceptron in &mut self.input_layer {
+        self.input_layer.iter_mut().for_each(|perceptron| {
             perceptron.train(&TrainingData {
-                inputs: hidden_back_propagation_results.clone(),
+                inputs: &hidden_back_propagation_results,
                 desired_answer,
             });
-        }
+        });
     }
 
-    /*
-     * TODO train the network and feed forward training to the later layers
-     */
     pub fn train(&mut self, inputs: &Vec<f64>, desired_answer: f64) {
         for _ in 0..NUM_TRAINING_ITERATIONS {
             let feed_forward_results = self.feed_forward(inputs);

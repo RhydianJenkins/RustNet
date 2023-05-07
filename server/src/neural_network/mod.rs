@@ -11,7 +11,7 @@ pub fn generate_predictions() -> Result<Vec<f64>, ()> {
     let network = &mut Network::new();
 
     let inputs = gen_random_floats(2);
-    network.train(&inputs, -4.0);
+    network.train(&inputs, 0.5);
 
     let predictions = network.feed_forward(&inputs);
 

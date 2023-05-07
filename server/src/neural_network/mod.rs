@@ -1,7 +1,6 @@
 mod network;
 mod perceptron;
 mod random_float_generator;
-mod training_data;
 
 use network::Network;
 
@@ -11,7 +10,8 @@ pub fn generate_predictions() -> Result<Vec<f64>, ()> {
     let network = &mut Network::new();
 
     let inputs = gen_random_floats(2);
-    network.train(&inputs, 0.5);
+    let desired_outputs = vec![0.1, 0.5, 0.9];
+    network.train(&inputs, &desired_outputs);
 
     let predictions = network.feed_forward(&inputs);
 

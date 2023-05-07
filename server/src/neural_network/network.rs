@@ -1,5 +1,3 @@
-use crate::neural_network::training_data::TrainingData;
-
 use super::{perceptron::Perceptron, random_float_generator::gen_random_floats};
 
 const NUM_INPUTS: usize = 2;
@@ -14,14 +12,20 @@ pub struct Network {
 
 impl Network {
     pub fn new() -> Network {
-        let input_perceptron = Perceptron::new(gen_random_floats(NUM_INPUTS), STARTING_BIAS);
-        let hidden_perceptron = Perceptron::new(gen_random_floats(1), STARTING_BIAS);
-        let output_perceptron = Perceptron::new(gen_random_floats(1), STARTING_BIAS);
+        let input_perceptron1 = Perceptron::new(gen_random_floats(NUM_INPUTS), STARTING_BIAS);
+        let input_perceptron2 = Perceptron::new(gen_random_floats(NUM_INPUTS), STARTING_BIAS);
+
+        let hidden_perceptron1 = Perceptron::new(gen_random_floats(2), STARTING_BIAS);
+        let hidden_perceptron2 = Perceptron::new(gen_random_floats(2), STARTING_BIAS);
+
+        let output_perceptron1 = Perceptron::new(gen_random_floats(2), STARTING_BIAS);
+        let output_perceptron2 = Perceptron::new(gen_random_floats(2), STARTING_BIAS);
+        let output_perceptron3 = Perceptron::new(gen_random_floats(2), STARTING_BIAS);
 
         Network {
-            input_layer: vec![input_perceptron],
-            hidden_layer: vec![hidden_perceptron],
-            output_layer: vec![output_perceptron],
+            input_layer: vec![input_perceptron1, input_perceptron2],
+            hidden_layer: vec![hidden_perceptron1, hidden_perceptron2],
+            output_layer: vec![output_perceptron1, output_perceptron2, output_perceptron3],
         }
     }
 
@@ -60,38 +64,52 @@ impl Network {
         output_layer_results
     }
 
-    fn back_propagate(&mut self, feed_forward_results: Vec<f64>, desired_answer: f64) {
+    fn back_propagate(&mut self, feed_forward_results: Vec<f64>, desired_answer: &Vec<f64>) {
         let output_back_propagation_results = self
             .output_layer
             .iter_mut()
-            .map(|perceptron| {
-                perceptron.train(&TrainingData {
-                    inputs: &feed_forward_results,
-                    desired_answer,
-                })
+            .enumerate()
+            .map(|(index, perceptron)| {
+                let desired_answer_for_this_perceptron = desired_answer
+                    .get(index)
+                    .expect("could not get desired answer for perceptron in output layer");
+
+                perceptron.train(&feed_forward_results, *desired_answer_for_this_perceptron)
             })
             .collect::<Vec<f64>>();
 
         let hidden_back_propagation_results = self
             .hidden_layer
             .iter_mut()
-            .map(|perceptron| {
-                perceptron.train(&TrainingData {
-                    inputs: &output_back_propagation_results,
-                    desired_answer,
-                })
+            .enumerate()
+            .map(|(index, perceptron)| {
+                let desired_answer_for_this_perceptron = desired_answer
+                    .get(index)
+                    .expect("could not get desired answer for perceptron in hidden layer");
+
+                perceptron.train(
+                    &output_back_propagation_results,
+                    *desired_answer_for_this_perceptron,
+                )
             })
             .collect::<Vec<f64>>();
 
-        self.input_layer.iter_mut().for_each(|perceptron| {
-            perceptron.train(&TrainingData {
-                inputs: &hidden_back_propagation_results,
-                desired_answer,
+        self.input_layer
+            .iter_mut()
+            .enumerate()
+            .for_each(|(index, perceptron)| {
+                let desired_answer_for_this_perceptron = desired_answer
+                    .get(index)
+                    .expect("could not get desired answer for perceptron in input layer");
+
+                perceptron.train(
+                    &hidden_back_propagation_results,
+                    *desired_answer_for_this_perceptron,
+                );
             });
-        });
     }
 
-    pub fn train(&mut self, inputs: &Vec<f64>, desired_answer: f64) {
+    pub fn train(&mut self, inputs: &Vec<f64>, desired_answer: &Vec<f64>) {
         for _ in 0..NUM_TRAINING_ITERATIONS {
             let feed_forward_results = self.feed_forward(inputs);
             self.back_propagate(feed_forward_results, desired_answer);

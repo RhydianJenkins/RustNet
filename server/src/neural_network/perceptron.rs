@@ -1,7 +1,5 @@
 use std::f64::consts::E;
 
-use super::training_data::TrainingData;
-
 pub struct Perceptron {
     weights: Vec<f64>,
     bias: f64,
@@ -45,18 +43,19 @@ impl Perceptron {
      * Updates the weights and bias of this perceptron based on the error of the guess.
      * Returns the guess (the output of the perceptron).
      */
-    pub fn train(&mut self, training_data: &TrainingData) -> f64 {
-        let guess = self.feed_forward(&training_data.inputs);
-        let error = training_data.desired_answer - guess;
-        let weights: Vec<f64> = self
+    pub fn train(&mut self, inputs: &Vec<f64>, desired_answer: f64) -> f64 {
+        let guess = self.feed_forward(&inputs);
+        let cost =  desired_answer - guess;
+
+        let weights = self
             .weights
             .iter()
-            .zip(training_data.inputs.iter())
-            .map(|(weight, training_input)| weight + training_input * error * LEARNING_RATE)
+            .zip(inputs.iter())
+            .map(|(weight, training_input)| weight + training_input * cost * LEARNING_RATE)
             .collect();
 
         self.weights = weights;
-        self.bias = self.bias + error * LEARNING_RATE;
+        self.bias = self.bias + cost * LEARNING_RATE;
 
         guess
     }

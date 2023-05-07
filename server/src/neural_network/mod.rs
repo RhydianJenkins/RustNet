@@ -9,11 +9,11 @@ use self::random_float_generator::gen_random_floats;
 pub fn generate_predictions() -> Result<Vec<f64>, ()> {
     let network = &mut Network::new();
 
-    let inputs = gen_random_floats(2);
-    let desired_outputs = vec![0.1, 0.5, 0.9];
+    let inputs = gen_random_floats(16);
+    let desired_outputs = vec![0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9];
     network.train(&inputs, &desired_outputs);
 
-    let predictions = network.feed_forward(&inputs);
+    let (_, _, predictions) = network.feed_forward(&inputs);
 
     Ok(predictions)
 }

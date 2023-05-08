@@ -34,7 +34,7 @@ impl Network {
      * Return the output of the last perceptron in the network.
      * This is the prediction.
      */
-    pub fn feed_forward(&self, inputs: &Vec<f64>) -> (&Vec<f64>, &Vec<f64>, &Vec<f64>) {
+    pub fn feed_forward(&self, inputs: &Vec<f64>) -> (Vec<f64>, Vec<f64>, Vec<f64>) {
         if inputs.len() != NUM_INPUTS {
             panic!("Expected {} inputs, got {}", NUM_INPUTS, inputs.len());
         }
@@ -59,9 +59,9 @@ impl Network {
         }
 
         (
-            &input_layer_results,
-            &hidden_layer_results,
-            &output_layer_results,
+            input_layer_results,
+            hidden_layer_results,
+            output_layer_results,
         )
     }
 
@@ -109,9 +109,9 @@ impl Network {
                 self.feed_forward(inputs);
 
             self.back_propagate(
-                input_layer_answers,
-                hidden_layer_answers,
-                output_layer_answers,
+                &input_layer_answers,
+                &hidden_layer_answers,
+                &output_layer_answers,
                 desired_answer,
             );
         }

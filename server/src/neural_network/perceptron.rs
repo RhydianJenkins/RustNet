@@ -60,18 +60,14 @@ mod tests {
     use super::*;
 
     macro_rules! sigmoid_tests {
-    ($($name:ident: $value:expr,)*) => {$(
-        #[test]
-        fn $name() {
-            let result = sigmoid($value);
-
-            println!("sigmoid({}) = {}", $value, result);
-
-            assert!(result >= 0.0);
-            assert!(result <= 1.0);
-        }
-    )*}
-}
+        ($($name:ident: $value:expr,)*) => {$(
+            #[test]
+            fn $name() {
+                let result = sigmoid($value);
+                assert!(result >= 0.0 && result <= 1.0);
+            }
+        )*}
+    }
 
     sigmoid_tests! {
         sig_0: -10.0,

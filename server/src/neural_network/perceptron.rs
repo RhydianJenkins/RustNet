@@ -1,5 +1,6 @@
 use std::f64::consts::E;
 
+#[derive(Debug)]
 pub struct Perceptron {
     weights: Vec<f64>,
     bias: f64,
@@ -19,24 +20,13 @@ impl Perceptron {
      * (the sign of the sum).
      */
     pub fn feed_forward(&self, inputs: &Vec<f64>) -> f64 {
-        let sum: f64 = inputs
+        let weighted_sum: f64 = inputs
             .iter()
             .zip(self.weights.iter())
-            .map(|(input, weight)| input * weight + self.bias)
-            .sum();
+            .map(|(input, weight)| input * weight)
+            .sum::<f64>();
 
-        self.activate(sum)
-    }
-
-    /*
-     * Takes a value from the feed_forward and decides what value it needs to output.
-     * This can get really complicated, involving calculus and other things in more complex neural networks.
-     * Here, we're KISSing it and returning a normalized value between 0 and 1.
-     */
-    fn activate(&self, sum: f64) -> f64 {
-        let normalized_sum = sum / (1.0 + E.powf(-sum));
-
-        normalized_sum
+        sigmoid(weighted_sum)
     }
 
     /*
@@ -45,18 +35,50 @@ impl Perceptron {
      */
     pub fn train(&mut self, inputs: &Vec<f64>, desired_answer: f64) -> f64 {
         let guess = self.feed_forward(&inputs);
-        let cost =  desired_answer - guess;
+        let cost = desired_answer - guess;
 
-        let weights = self
+        let new_weights = self
             .weights
             .iter()
             .zip(inputs.iter())
-            .map(|(weight, training_input)| weight + training_input * cost * LEARNING_RATE)
-            .collect();
+            .map(|(weight, training_input)| weight * training_input * cost * LEARNING_RATE)
+            .collect::<Vec<f64>>();
 
-        self.weights = weights;
         self.bias = self.bias + cost * LEARNING_RATE;
+        self.weights = new_weights;
 
         guess
+    }
+}
+
+fn sigmoid(x: f64) -> f64 {
+    1.0 / (1.0 + E.powf(-x))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    macro_rules! sigmoid_tests {
+    ($($name:ident: $value:expr,)*) => {$(
+        #[test]
+        fn $name() {
+            let result = sigmoid($value);
+
+            println!("sigmoid({}) = {}", $value, result);
+
+            assert!(result >= 0.0);
+            assert!(result <= 1.0);
+        }
+    )*}
+}
+
+    sigmoid_tests! {
+        sig_0: -10.0,
+        sig_1: -0.0,
+        sig_2: 0.0,
+        sig_3: 0.5,
+        sig_4: 1.0,
+        sig_5: 1000.0,
     }
 }

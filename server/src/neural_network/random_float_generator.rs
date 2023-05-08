@@ -1,5 +1,8 @@
 use rand::{thread_rng, Rng};
 
+const MIN: f64 = 0.0;
+const MAX: f64 = 1.0;
+
 pub fn gen_random_floats(number: usize) -> Vec<f64> {
     let values: Vec<f64> = (0..number).map(|_| gen_random_float()).collect();
 
@@ -7,7 +10,7 @@ pub fn gen_random_floats(number: usize) -> Vec<f64> {
 }
 
 pub fn gen_random_float() -> f64 {
-    thread_rng().gen_range::<f64, _>(0.0..1.0)
+    thread_rng().gen_range::<f64, _>(MIN..MAX)
 }
 
 #[cfg(test)]

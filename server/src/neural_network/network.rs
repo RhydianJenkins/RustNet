@@ -2,7 +2,7 @@ use super::{perceptron::Perceptron, random_float_generator::gen_random_floats};
 
 const NUM_INPUTS: usize = 16;
 const STARTING_BIAS: f64 = 1.0;
-const NUM_TRAINING_ITERATIONS: i32 = 10000;
+const NUM_TRAINING_ITERATIONS: i32 = 1000;
 
 pub struct Network {
     input_layer: Vec<Perceptron>,
@@ -115,6 +115,10 @@ impl Network {
             });
     }
 
+    /*
+     * TODO do not train on the same data over and over again. Instead, generate new data each
+     * time.
+     */
     pub fn train(&mut self, inputs: &Vec<f64>, desired_answer: &Vec<f64>) {
         for _ in 0..NUM_TRAINING_ITERATIONS {
             let (input_layer_results, hidden_layer_results, output_layer_results) =

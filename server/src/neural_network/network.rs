@@ -2,8 +2,9 @@ use super::{perceptron::Perceptron, random_float_generator::gen_random_floats};
 
 const NUM_INPUTS: usize = 16;
 const STARTING_BIAS: f64 = 1.0;
-const NUM_TRAINING_ITERATIONS: i32 = 1000;
+const NUM_TRAINING_ITERATIONS: i32 = 1;
 
+#[derive(Debug)]
 pub struct Network {
     input_layer: Vec<Perceptron>,
     hidden_layer: Vec<Perceptron>,
@@ -33,7 +34,7 @@ impl Network {
      * Return the output of the last perceptron in the network.
      * This is the prediction.
      */
-    pub fn feed_forward(&self, inputs: &Vec<f64>) -> (Vec<f64>, Vec<f64>, Vec<f64>) {
+    pub fn feed_forward(&self, inputs: &Vec<f64>) -> (&Vec<f64>, &Vec<f64>, &Vec<f64>) {
         if inputs.len() != NUM_INPUTS {
             panic!("Expected {} inputs, got {}", NUM_INPUTS, inputs.len());
         }
@@ -58,60 +59,43 @@ impl Network {
         }
 
         (
-            input_layer_results,
-            hidden_layer_results,
-            output_layer_results,
+            &input_layer_results,
+            &hidden_layer_results,
+            &output_layer_results,
         )
     }
 
     fn back_propagate(
         &mut self,
-        input_layer_results: Vec<f64>,
-        hidden_layer_results: Vec<f64>,
-        output_layer_results: Vec<f64>,
+        input_layer_answers: &Vec<f64>,
+        hidden_layer_answers: &Vec<f64>,
+        output_layer_answers: &Vec<f64>,
         desired_answer: &Vec<f64>,
     ) {
+        let output_costs = self.calculate_cost(output_layer_answers, desired_answer);
         let output_back_propagation_results = self
             .output_layer
             .iter_mut()
-            .enumerate()
-            .map(|(index, perceptron)| {
-                let desired_answer_for_this_perceptron = desired_answer
-                    .get(index)
-                    .expect("could not get desired answer for perceptron in output layer");
-
-                perceptron.train(&output_layer_results, *desired_answer_for_this_perceptron)
-            })
+            .zip(output_costs.iter())
+            .map(|(perceptron, cost)| perceptron.train(&output_layer_answers, *cost))
             .collect::<Vec<f64>>();
 
+        let hidden_costs =
+            self.calculate_cost(&hidden_layer_answers, &output_back_propagation_results);
         let hidden_back_propagation_results = self
             .hidden_layer
             .iter_mut()
-            .enumerate()
-            .map(|(index, perceptron)| {
-                let desired_answer_for_this_perceptron = hidden_layer_results
-                    .get(index)
-                    .expect("could not get desired answer for perceptron in hidden layer");
-
-                perceptron.train(
-                    &output_back_propagation_results,
-                    *desired_answer_for_this_perceptron,
-                )
-            })
+            .zip(hidden_costs.iter())
+            .map(|(perceptron, cost)| perceptron.train(&output_back_propagation_results, *cost))
             .collect::<Vec<f64>>();
 
+        let input_costs =
+            self.calculate_cost(&input_layer_answers, &hidden_back_propagation_results);
         self.input_layer
             .iter_mut()
-            .enumerate()
-            .for_each(|(index, perceptron)| {
-                let desired_answer_for_this_perceptron = input_layer_results
-                    .get(index)
-                    .expect("could not get desired answer for perceptron in input layer");
-
-                perceptron.train(
-                    &hidden_back_propagation_results,
-                    *desired_answer_for_this_perceptron,
-                );
+            .zip(input_costs.iter())
+            .for_each(|(perceptron, cost)| {
+                perceptron.train(&hidden_back_propagation_results, *cost);
             });
     }
 
@@ -121,15 +105,23 @@ impl Network {
      */
     pub fn train(&mut self, inputs: &Vec<f64>, desired_answer: &Vec<f64>) {
         for _ in 0..NUM_TRAINING_ITERATIONS {
-            let (input_layer_results, hidden_layer_results, output_layer_results) =
+            let (input_layer_answers, hidden_layer_answers, output_layer_answers) =
                 self.feed_forward(inputs);
 
             self.back_propagate(
-                input_layer_results,
-                hidden_layer_results,
-                output_layer_results,
+                input_layer_answers,
+                hidden_layer_answers,
+                output_layer_answers,
                 desired_answer,
             );
         }
+    }
+
+    fn calculate_cost(&self, actual_answer: &Vec<f64>, desired_answer: &Vec<f64>) -> Vec<f64> {
+        actual_answer
+            .iter()
+            .zip(desired_answer.iter())
+            .map(|(output, desired)| (output - desired).powi(2))
+            .collect::<Vec<f64>>()
     }
 }

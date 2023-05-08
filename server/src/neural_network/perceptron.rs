@@ -29,25 +29,19 @@ impl Perceptron {
         sigmoid(weighted_sum)
     }
 
-    /*
-     * Updates the weights and bias of this perceptron based on the error of the guess.
-     * Returns the guess (the output of the perceptron).
-     */
-    pub fn train(&mut self, inputs: &Vec<f64>, desired_answer: f64) -> f64 {
-        let guess = self.feed_forward(&inputs);
-        let cost = desired_answer - guess;
-
+    pub fn train(&mut self, inputs: &Vec<f64>, cost: f64) -> f64 {
         let new_weights = self
             .weights
             .iter()
             .zip(inputs.iter())
-            .map(|(weight, training_input)| weight * training_input * cost * LEARNING_RATE)
+            .map(|(weight, training_input)| {
+                sigmoid(weight * training_input * (1.0 - cost) * LEARNING_RATE)
+            })
             .collect::<Vec<f64>>();
 
-        self.bias = self.bias + cost * LEARNING_RATE;
         self.weights = new_weights;
 
-        guess
+        self.feed_forward(&inputs)
     }
 }
 

@@ -21,9 +21,9 @@ struct ResponseBody {
     predictions: Vec<f64>,
 }
 
-#[get("/health")]
+#[get("/")]
 async fn get_health() -> impl Responder {
-    HttpResponse::Ok().body("Hello World!")
+    HttpResponse::Ok().body("Hello World! Use GET /network and POST /predictions.")
 }
 
 #[get("/network")]
@@ -41,13 +41,13 @@ async fn post_predictions(data: Data<AppState>) -> impl Responder {
 
 #[main]
 async fn main() -> Result<()> {
-    HttpServer::new(|| {
+    HttpServer::new(move || {
         let data = Data::new(AppState {
             network: generate_trained_network(),
         });
 
         App::new()
-            .app_data(data.clone())
+            .app_data(data)
             .wrap(Cors::permissive())
             .wrap(Logger::default())
             .service(get_health)

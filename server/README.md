@@ -6,5 +6,5 @@
 cargo run
 
 # ... in another window
-curl http://localhost:8080/health # returns "Hello World!"
+curl http://localhost:8080
 ```

@@ -1,6 +1,6 @@
 use rand::{thread_rng, Rng};
 
-const MIN: f64 = 0.0;
+const MIN: f64 = -1.0;
 const MAX: f64 = 1.0;
 
 pub fn gen_random_floats(number: usize) -> Vec<f64> {

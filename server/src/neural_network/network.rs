@@ -1,8 +1,7 @@
 use super::{perceptron::Perceptron, random_float_generator::gen_random_floats};
 
-const NUM_INPUTS: usize = 16;
-const STARTING_BIAS: f64 = 1.0;
-const NUM_TRAINING_ITERATIONS: i32 = 1;
+const NUM_TRAINING_ITERATIONS: i32 = 100000;
+const NUM_RAW_INPUTS: usize = 10; // TODO 784
 
 #[derive(Debug)]
 pub struct Network {
@@ -11,18 +10,18 @@ pub struct Network {
     output_layer: Vec<Perceptron>,
 }
 
-fn gen_layer(num_perceptrons: usize, num_inputs: usize) -> Vec<Perceptron> {
-    (0..num_perceptrons)
-        .map(|_| Perceptron::new(gen_random_floats(num_inputs), STARTING_BIAS))
-        .collect()
-}
-
 impl Network {
     pub fn new() -> Network {
         Network {
-            input_layer: gen_layer(16, NUM_INPUTS),
-            hidden_layer: gen_layer(16, 16),
-            output_layer: gen_layer(9, 16),
+            input_layer: (0..16)
+                .map(|_| Perceptron::new(gen_random_floats(NUM_RAW_INPUTS)))
+                .collect(),
+            hidden_layer: (0..16)
+                .map(|_| Perceptron::new(gen_random_floats(16)))
+                .collect(),
+            output_layer: (0..9)
+                .map(|_| Perceptron::new(gen_random_floats(16)))
+                .collect(),
         }
     }
 
@@ -35,26 +34,22 @@ impl Network {
      * This is the prediction.
      */
     pub fn feed_forward(&self, inputs: &Vec<f64>) -> (Vec<f64>, Vec<f64>, Vec<f64>) {
-        if inputs.len() != NUM_INPUTS {
-            panic!("Expected {} inputs, got {}", NUM_INPUTS, inputs.len());
-        }
-
         let mut input_layer_results: Vec<f64> = vec![];
         let mut hidden_layer_results: Vec<f64> = vec![];
         let mut output_layer_results: Vec<f64> = vec![];
 
         for perceptron in &self.input_layer {
-            let output = perceptron.feed_forward(inputs);
+            let output = perceptron.activate(inputs);
             input_layer_results.push(output);
         }
 
         for perceptron in &self.hidden_layer {
-            let output = perceptron.feed_forward(&input_layer_results);
+            let output = perceptron.activate(&input_layer_results);
             hidden_layer_results.push(output);
         }
 
         for perceptron in &self.output_layer {
-            let output = perceptron.feed_forward(&hidden_layer_results);
+            let output = perceptron.activate(&hidden_layer_results);
             output_layer_results.push(output);
         }
 
@@ -65,63 +60,91 @@ impl Network {
         )
     }
 
+    /*
+     * for every node in the output layer
+     *   calculate the error signal
+     * end
+     *
+     * for all hidden layers
+     *   for every node in the layer
+     *     1. Calculate the node's signal error
+     *     2. Update each node's weight in the network
+     *   end
+     * end
+     */
     fn back_propagate(
         &mut self,
-        input_layer_answers: &Vec<f64>,
-        hidden_layer_answers: &Vec<f64>,
-        output_layer_answers: &Vec<f64>,
-        desired_answer: &Vec<f64>,
+        input_layer_results: &Vec<f64>,
+        hidden_layer_results: &Vec<f64>,
+        output_layer_results: &Vec<f64>,
+        desired_results: &Vec<f64>,
     ) {
-        let output_costs = self.calculate_cost(output_layer_answers, desired_answer);
-        let output_back_propagation_results = self
-            .output_layer
-            .iter_mut()
-            .zip(output_costs.iter())
-            .map(|(perceptron, cost)| perceptron.train(&output_layer_answers, *cost))
-            .collect::<Vec<f64>>();
+        let output_error_signal =
+            self.calculate_error_signal(output_layer_results, desired_results);
+        self.update_output_weights(&output_error_signal);
 
-        let hidden_costs =
-            self.calculate_cost(&hidden_layer_answers, &output_back_propagation_results);
-        let hidden_back_propagation_results = self
-            .hidden_layer
-            .iter_mut()
-            .zip(hidden_costs.iter())
-            .map(|(perceptron, cost)| perceptron.train(&output_back_propagation_results, *cost))
-            .collect::<Vec<f64>>();
+        let hidden_error_signal =
+            self.calculate_error_signal(hidden_layer_results, &output_error_signal);
+        self.update_hidden_weights(&hidden_error_signal);
 
-        let input_costs =
-            self.calculate_cost(&input_layer_answers, &hidden_back_propagation_results);
-        self.input_layer
-            .iter_mut()
-            .zip(input_costs.iter())
-            .for_each(|(perceptron, cost)| {
-                perceptron.train(&hidden_back_propagation_results, *cost);
-            });
+        let input_error_signal =
+            self.calculate_error_signal(input_layer_results, &hidden_error_signal);
+        self.update_input_weights(&input_error_signal);
     }
 
-    /*
-     * TODO do not train on the same data over and over again. Instead, generate new data each
-     * time.
-     */
-    pub fn train(&mut self, inputs: &Vec<f64>, desired_answer: &Vec<f64>) {
-        for _ in 0..NUM_TRAINING_ITERATIONS {
-            let (input_layer_answers, hidden_layer_answers, output_layer_answers) =
-                self.feed_forward(inputs);
+    fn calculate_error_signal(
+        &self,
+        actual_results: &Vec<f64>,
+        desired_results: &Vec<f64>,
+    ) -> Vec<f64> {
+        let error_signal = actual_results
+            .iter()
+            .zip(desired_results.iter())
+            .map(|(output, desired)| output - desired)
+            .collect::<Vec<f64>>();
 
-            self.back_propagate(
-                &input_layer_answers,
-                &hidden_layer_answers,
-                &output_layer_answers,
-                desired_answer,
-            );
+        error_signal
+    }
+
+    fn update_output_weights(&mut self, error_signal: &Vec<f64>) {
+        for perceptron in &mut self.output_layer {
+            perceptron.update_weights(error_signal.clone());
         }
     }
 
-    fn calculate_cost(&self, actual_answer: &Vec<f64>, desired_answer: &Vec<f64>) -> Vec<f64> {
-        actual_answer
-            .iter()
-            .zip(desired_answer.iter())
-            .map(|(output, desired)| (output - desired).powi(2))
-            .collect::<Vec<f64>>()
+    fn update_hidden_weights(&mut self, error_signal: &Vec<f64>) {
+        for perceptron in &mut self.hidden_layer {
+            perceptron.update_weights(error_signal.clone());
+        }
+    }
+
+    fn update_input_weights(&mut self, error_signal: &Vec<f64>) {
+        for perceptron in &mut self.input_layer {
+            perceptron.update_weights(error_signal.clone());
+        }
+    }
+
+    pub fn train(&mut self) {
+        for (_i, _training_iteration) in (0..NUM_TRAINING_ITERATIONS).enumerate() {
+            // TODO: Make this come from the grid values of the user's canvas
+            let training_data = &gen_random_floats(NUM_RAW_INPUTS);
+
+            // pretend the user drew a 9
+            let desired_outputs = &vec![0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+
+            self.train_once(training_data, desired_outputs);
+        }
+    }
+
+    fn train_once(&mut self, inputs: &Vec<f64>, desired_results: &Vec<f64>) {
+        let (input_layer_results, hidden_layer_results, output_layer_answers) =
+            self.feed_forward(inputs);
+
+        self.back_propagate(
+            &input_layer_results,
+            &hidden_layer_results,
+            &output_layer_answers,
+            desired_results,
+        );
     }
 }

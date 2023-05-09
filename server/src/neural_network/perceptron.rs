@@ -1,16 +1,20 @@
 use std::f64::consts::E;
 
-#[derive(Debug)]
-pub struct Perceptron {
-    weights: Vec<f64>,
-    bias: f64,
-}
-
+const STARTING_BIAS: f64 = 1.0;
 const LEARNING_RATE: f64 = 0.01;
 
+#[derive(Debug)]
+pub struct Perceptron {
+    pub weights: Vec<f64>,
+    pub bias: f64,
+}
+
 impl Perceptron {
-    pub fn new(weights: Vec<f64>, bias: f64) -> Perceptron {
-        Perceptron { weights, bias }
+    pub fn new(weights: Vec<f64>) -> Perceptron {
+        Perceptron {
+            weights,
+            bias: STARTING_BIAS,
+        }
     }
 
     /*
@@ -19,7 +23,7 @@ impl Perceptron {
      * Compute the output of the perceptron based on that sum passed through an activation function
      * (the sign of the sum).
      */
-    pub fn feed_forward(&self, inputs: &Vec<f64>) -> f64 {
+    pub fn activate(&self, inputs: &Vec<f64>) -> f64 {
         let weighted_sum: f64 = inputs
             .iter()
             .zip(self.weights.iter())
@@ -29,25 +33,21 @@ impl Perceptron {
         sigmoid(weighted_sum + self.bias)
     }
 
-    /*
-     * TODO Return the desired nudges of each input to get the best output, solely based on this
-     * neuron.
-     *
-     * TODO 'cost' should be a Vec of nudges we wish to apply to the previous layer to get our
-     * desired output. We don't care what that desired output is here, we just want to nudge the
-     * weights/bias in the right direction to get the cost as close to 0 as possible.
-     */
-    pub fn train(&mut self, inputs: &Vec<f64>, cost: f64) -> f64 {
+    pub fn update_weights(&mut self, error_signals: Vec<f64>) {
         let new_weights = self
             .weights
             .iter()
-            .zip(inputs.iter())
-            .map(|(weight, training_input)| sigmoid(weight * training_input * LEARNING_RATE))
+            .zip(error_signals.iter())
+            .map(|(weight, error)| {
+                let new_weight = weight - LEARNING_RATE * error;
+
+                new_weight
+            })
             .collect::<Vec<f64>>();
 
-        self.weights = new_weights;
+        // TODO update bias of prev layer
 
-        self.feed_forward(&inputs)
+        self.weights = new_weights;
     }
 }
 

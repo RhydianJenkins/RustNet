@@ -26,17 +26,23 @@ impl Perceptron {
             .map(|(input, weight)| input * weight)
             .sum::<f64>();
 
-        sigmoid(weighted_sum)
+        sigmoid(weighted_sum + self.bias)
     }
 
+    /*
+     * TODO Return the desired nudges of each input to get the best output, solely based on this
+     * neuron.
+     *
+     * TODO 'cost' should be a Vec of nudges we wish to apply to the previous layer to get our
+     * desired output. We don't care what that desired output is here, we just want to nudge the
+     * weights/bias in the right direction to get the cost as close to 0 as possible.
+     */
     pub fn train(&mut self, inputs: &Vec<f64>, cost: f64) -> f64 {
         let new_weights = self
             .weights
             .iter()
             .zip(inputs.iter())
-            .map(|(weight, training_input)| {
-                sigmoid(weight * training_input * (1.0 - cost) * LEARNING_RATE)
-            })
+            .map(|(weight, training_input)| sigmoid(weight * training_input * LEARNING_RATE))
             .collect::<Vec<f64>>();
 
         self.weights = new_weights;

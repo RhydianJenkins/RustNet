@@ -77,6 +77,7 @@ impl Network {
      */
     fn back_propagate(
         &mut self,
+        raw_input: &Vec<f64>,
         input_layer_results: &Vec<f64>,
         hidden_layer_results: &Vec<f64>,
         output_layer_results: &Vec<f64>,
@@ -84,15 +85,15 @@ impl Network {
     ) {
         let output_error_signal =
             self.calculate_error_signal(output_layer_results, desired_results);
-        self.update_output_weights(&output_error_signal);
+        self.update_output_weights(&output_error_signal, hidden_layer_results);
 
         let hidden_error_signal =
             self.calculate_error_signal(hidden_layer_results, &output_error_signal);
-        self.update_hidden_weights(&hidden_error_signal);
+        self.update_hidden_weights(&hidden_error_signal, input_layer_results);
 
         let input_error_signal =
             self.calculate_error_signal(input_layer_results, &hidden_error_signal);
-        self.update_input_weights(&input_error_signal);
+        self.update_input_weights(&input_error_signal, raw_input);
     }
 
     fn calculate_error_signal(
@@ -109,21 +110,21 @@ impl Network {
         error_signal
     }
 
-    fn update_output_weights(&mut self, error_signal: &Vec<f64>) {
+    fn update_output_weights(&mut self, error_signal: &Vec<f64>, prev_layer_results: &Vec<f64>) {
         for perceptron in &mut self.output_layer {
-            perceptron.update_weights(error_signal.clone());
+            perceptron.update_weights(error_signal, prev_layer_results);
         }
     }
 
-    fn update_hidden_weights(&mut self, error_signal: &Vec<f64>) {
+    fn update_hidden_weights(&mut self, error_signal: &Vec<f64>, prev_layer_results: &Vec<f64>) {
         for perceptron in &mut self.hidden_layer {
-            perceptron.update_weights(error_signal.clone());
+            perceptron.update_weights(error_signal, prev_layer_results);
         }
     }
 
-    fn update_input_weights(&mut self, error_signal: &Vec<f64>) {
+    fn update_input_weights(&mut self, error_signal: &Vec<f64>, prev_layer_results: &Vec<f64>) {
         for perceptron in &mut self.input_layer {
-            perceptron.update_weights(error_signal.clone());
+            perceptron.update_weights(error_signal, prev_layer_results);
         }
     }
 
@@ -154,6 +155,7 @@ impl Network {
             self.feed_forward(inputs);
 
         self.back_propagate(
+            &inputs,
             &input_layer_results,
             &hidden_layer_results,
             &output_layer_answers,

@@ -18,10 +18,8 @@ impl Perceptron {
     }
 
     /*
-     * For every input, multiply that input by its weight.
-     * Sum all of the weighted inputs.
-     * Compute the output of the perceptron based on that sum passed through an activation function
-     * (the sign of the sum).
+     * Weighted sum all of the inputs.
+     * Activate the weighted sum with a sigmoid function.
      */
     pub fn activate(&self, inputs: &Vec<f64>) -> f64 {
         let weighted_sum: f64 = inputs
@@ -33,13 +31,14 @@ impl Perceptron {
         sigmoid(weighted_sum + self.bias)
     }
 
-    pub fn update_weights(&mut self, error_signals: Vec<f64>) {
+    pub fn update_weights(&mut self, error_signals: &Vec<f64>, prev_layer_results: &Vec<f64>) {
         let new_weights = self
             .weights
             .iter()
             .zip(error_signals.iter())
-            .map(|(weight, error)| {
-                let new_weight = weight - LEARNING_RATE * error;
+            .zip(prev_layer_results.iter())
+            .map(|((weight, prev_layer_result), error)| {
+                let new_weight = weight - (LEARNING_RATE * error * prev_layer_result);
 
                 new_weight
             })

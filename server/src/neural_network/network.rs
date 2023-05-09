@@ -1,7 +1,10 @@
 use super::{perceptron::Perceptron, random_float_generator::gen_random_floats};
+use indicatif::ProgressBar;
 
 const NUM_TRAINING_ITERATIONS: i32 = 100000;
 const NUM_RAW_INPUTS: usize = 10; // TODO 784
+const NUM_HIDDEN_NEURONS: usize = 16;
+const NUM_OUTPUTS: usize = 9;
 
 #[derive(Debug)]
 pub struct Network {
@@ -13,14 +16,14 @@ pub struct Network {
 impl Network {
     pub fn new() -> Network {
         Network {
-            input_layer: (0..16)
+            input_layer: (0..NUM_HIDDEN_NEURONS)
                 .map(|_| Perceptron::new(gen_random_floats(NUM_RAW_INPUTS)))
                 .collect(),
-            hidden_layer: (0..16)
-                .map(|_| Perceptron::new(gen_random_floats(16)))
+            hidden_layer: (0..NUM_HIDDEN_NEURONS)
+                .map(|_| Perceptron::new(gen_random_floats(NUM_HIDDEN_NEURONS)))
                 .collect(),
-            output_layer: (0..9)
-                .map(|_| Perceptron::new(gen_random_floats(16)))
+            output_layer: (0..NUM_OUTPUTS)
+                .map(|_| Perceptron::new(gen_random_floats(NUM_HIDDEN_NEURONS)))
                 .collect(),
         }
     }
@@ -125,15 +128,25 @@ impl Network {
     }
 
     pub fn train(&mut self) {
+        println!("Training with {} iterations...", NUM_TRAINING_ITERATIONS);
+
+        let pb = ProgressBar::new(NUM_TRAINING_ITERATIONS.try_into().unwrap());
+
         for (_i, _training_iteration) in (0..NUM_TRAINING_ITERATIONS).enumerate() {
             // TODO: Make this come from the grid values of the user's canvas
             let training_data = &gen_random_floats(NUM_RAW_INPUTS);
 
-            // pretend the user drew a 9
+            // pretend the user drew a 2
             let desired_outputs = &vec![0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+
+            pb.inc(1);
 
             self.train_once(training_data, desired_outputs);
         }
+
+        pb.finish_with_message("Done");
+
+        println!("Training complete.");
     }
 
     fn train_once(&mut self, inputs: &Vec<f64>, desired_results: &Vec<f64>) {

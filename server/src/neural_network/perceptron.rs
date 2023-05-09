@@ -3,7 +3,7 @@ use std::f64::consts::E;
 const STARTING_BIAS: f64 = 1.0;
 const LEARNING_RATE: f64 = 0.01;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Perceptron {
     pub weights: Vec<f64>,
     pub bias: f64,

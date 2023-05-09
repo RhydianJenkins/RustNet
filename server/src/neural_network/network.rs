@@ -1,16 +1,17 @@
 use super::{perceptron::Perceptron, random_float_generator::gen_random_floats};
 use indicatif::ProgressBar;
 
-const NUM_TRAINING_ITERATIONS: i32 = 100000;
+const NUM_TRAINING_ITERATIONS: i32 = 100;
 const NUM_RAW_INPUTS: usize = 10; // TODO 784
 const NUM_HIDDEN_NEURONS: usize = 16;
 const NUM_OUTPUTS: usize = 9;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Network {
     input_layer: Vec<Perceptron>,
     hidden_layer: Vec<Perceptron>,
     output_layer: Vec<Perceptron>,
+    trained: bool,
 }
 
 impl Network {
@@ -25,6 +26,7 @@ impl Network {
             output_layer: (0..NUM_OUTPUTS)
                 .map(|_| Perceptron::new(gen_random_floats(NUM_HIDDEN_NEURONS)))
                 .collect(),
+            trained: false,
         }
     }
 
@@ -146,6 +148,8 @@ impl Network {
         }
 
         pb.finish_with_message("Done");
+
+        self.trained = true;
 
         println!("Training complete.");
     }

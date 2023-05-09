@@ -1,9 +1,11 @@
 use std::f64::consts::E;
 
+use serde::Serialize;
+
 const STARTING_BIAS: f64 = 1.0;
 const LEARNING_RATE: f64 = 0.01;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize)]
 pub struct Perceptron {
     pub weights: Vec<f64>,
     pub bias: f64,

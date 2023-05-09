@@ -1,12 +1,13 @@
 use super::{perceptron::Perceptron, random_float_generator::gen_random_floats};
 use indicatif::ProgressBar;
+use serde::Serialize;
 
-const NUM_TRAINING_ITERATIONS: i32 = 100;
-const NUM_RAW_INPUTS: usize = 10; // TODO 784
+pub const NUM_RAW_INPUTS: usize = 10; // TODO 784 inputs in a 28x28 canvas
 const NUM_HIDDEN_NEURONS: usize = 16;
 const NUM_OUTPUTS: usize = 9;
+const NUM_TRAINING_ITERATIONS: i32 = 100;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize)]
 pub struct Network {
     input_layer: Vec<Perceptron>,
     hidden_layer: Vec<Perceptron>,
@@ -147,10 +148,9 @@ impl Network {
             self.train_once(training_data, desired_outputs);
         }
 
-        pb.finish_with_message("Done");
-
         self.trained = true;
 
+        pb.finish_with_message("Done");
         println!("Training complete.");
     }
 

@@ -1,6 +1,6 @@
 pub mod network;
 mod perceptron;
-mod random_float_generator;
+pub mod random_float_generator;
 
 use network::Network;
 
@@ -10,21 +10,23 @@ pub fn generate_trained_network() -> Network {
     network
 }
 
-pub fn generate_predictions(network: &Network) -> Result<Vec<f64>, ()> {
-    let input_values = &vec![0.1]; // TODO raw pixel values from canvas
-    let (_, _, predictions) = network.feed_forward(&input_values);
+pub fn generate_predictions(network: &Network, input_values: &Vec<f64>) -> Result<Vec<f64>, ()> {
+    let (_, _, predictions) = network.feed_forward(input_values);
 
     Ok(predictions)
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::neural_network::random_float_generator::gen_random_floats;
+
     use super::*;
 
     #[test]
     fn generate_predictions_is_ok() {
         let network = Network::new();
-        let predictions = generate_predictions(&network);
+        let random_inputs = gen_random_floats(network::NUM_RAW_INPUTS);
+        let predictions = generate_predictions(&network, &random_inputs);
         assert!(predictions.is_ok());
     }
 }

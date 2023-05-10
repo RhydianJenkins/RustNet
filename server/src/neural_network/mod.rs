@@ -1,4 +1,4 @@
-mod data_loader;
+pub mod data_loader;
 pub mod network;
 mod perceptron;
 pub mod random_float_generator;

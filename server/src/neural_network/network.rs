@@ -1,11 +1,11 @@
+use super::data_loader::MnistImage;
 use super::{perceptron::Perceptron, random_float_generator::gen_random_floats};
 use indicatif::ProgressBar;
 use serde::Serialize;
 
-pub const NUM_RAW_INPUTS: usize = 10; // TODO 784 inputs in a 28x28 canvas
+pub const NUM_RAW_INPUTS: usize = 784;
 const NUM_HIDDEN_NEURONS: usize = 16;
 const NUM_OUTPUTS: usize = 9;
-const NUM_TRAINING_ITERATIONS: i32 = 100;
 
 #[derive(Clone, Debug, Serialize)]
 pub struct Network {
@@ -131,22 +131,16 @@ impl Network {
         }
     }
 
-    pub fn train(&mut self) {
-        println!("Training with {} iterations...", NUM_TRAINING_ITERATIONS);
+    pub fn train(&mut self, training_dataset: &Vec<MnistImage>) {
+        let num_training_examples = training_dataset.len() - 1;
+        println!("Training with {} iterations...", num_training_examples);
+        let pb = ProgressBar::new(num_training_examples.try_into().unwrap());
 
-        let pb = ProgressBar::new(NUM_TRAINING_ITERATIONS.try_into().unwrap());
-
-        for (_i, _training_iteration) in (0..NUM_TRAINING_ITERATIONS).enumerate() {
-            // TODO: Make this come from the grid values of the user's canvas
-            let training_data = &gen_random_floats(NUM_RAW_INPUTS);
-
-            // pretend the user drew a 2
-            let desired_outputs = &vec![0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+        training_dataset.iter().for_each(|training_data| {
+            self.train_once(training_data);
 
             pb.inc(1);
-
-            self.train_once(training_data, desired_outputs);
-        }
+        });
 
         self.trained = true;
 
@@ -154,16 +148,17 @@ impl Network {
         println!("Training complete.");
     }
 
-    fn train_once(&mut self, inputs: &Vec<f64>, desired_results: &Vec<f64>) {
+    fn train_once(&mut self, training_data: &MnistImage) {
+        let inputs = &training_data.image;
         let (input_layer_results, hidden_layer_results, output_layer_answers) =
             self.feed_forward(inputs);
 
         self.back_propagate(
-            &inputs,
+            inputs,
             &input_layer_results,
             &hidden_layer_results,
             &output_layer_answers,
-            desired_results,
+            &training_data.desired_output,
         );
     }
 }

@@ -48,16 +48,19 @@ impl Network {
             let output = perceptron.activate(inputs);
             input_layer_results.push(output);
         }
+        assert_eq!(input_layer_results.len(), NUM_HIDDEN_NEURONS);
 
         for perceptron in &self.hidden_layer {
             let output = perceptron.activate(&input_layer_results);
             hidden_layer_results.push(output);
         }
+        assert_eq!(hidden_layer_results.len(), NUM_HIDDEN_NEURONS);
 
         for perceptron in &self.output_layer {
             let output = perceptron.activate(&hidden_layer_results);
             output_layer_results.push(output);
         }
+        assert_eq!(output_layer_results.len(), NUM_OUTPUTS);
 
         (
             input_layer_results,

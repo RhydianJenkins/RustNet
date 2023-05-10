@@ -41,13 +41,13 @@ async fn post_predictions(data: Data<AppState>) -> impl Responder {
 
 #[main]
 async fn main() -> Result<()> {
-    HttpServer::new(move || {
-        let data = Data::new(AppState {
-            network: generate_trained_network(),
-        });
+    let data = Data::new(AppState {
+        network: generate_trained_network(),
+    });
 
+    HttpServer::new(move || {
         App::new()
-            .app_data(data)
+            .app_data(data.clone())
             .wrap(Cors::permissive())
             .wrap(Logger::default())
             .service(get_health)

@@ -2,7 +2,7 @@ mod neural_network;
 
 use actix_cors::Cors;
 use actix_web::main;
-use actix_web::web::Data;
+use actix_web::web::{Data, Path};
 use actix_web::{get, middleware::Logger, post, web, App, HttpResponse, HttpServer, Responder};
 use neural_network::network::Network;
 use neural_network::{generate_predictions, generate_trained_network};
@@ -16,7 +16,7 @@ struct AppState {
 }
 
 #[derive(Serialize)]
-struct ResponseBody {
+struct PredictionResponse {
     predictions: Vec<f64>,
     desired_output: Vec<f64>,
 }
@@ -31,6 +31,22 @@ async fn get_network(data: Data<AppState>) -> impl Responder {
     web::Json(data.network.clone())
 }
 
+#[get("/data/{index}")]
+async fn get_data(path: Path<usize>) -> impl Responder {
+    let index = path.into_inner();
+    let training_dataset = load_dataset("t10k").unwrap();
+
+    if index >= training_dataset.len() {
+        return web::Json(Option::None);
+    }
+
+    let mnist_image = training_dataset
+        .get(index)
+        .expect("Failed to read beyond dataset size");
+
+    web::Json(Option::Some(mnist_image.clone()))
+}
+
 #[post("/predictions")]
 async fn post_predictions(data: Data<AppState>) -> impl Responder {
     let training_dataset = load_dataset("t10k").unwrap();
@@ -39,7 +55,7 @@ async fn post_predictions(data: Data<AppState>) -> impl Responder {
     let desired_output = &mnist_image.desired_output;
     let predictions = generate_predictions(&data.network, inputs).unwrap();
 
-    web::Json(ResponseBody {
+    web::Json(PredictionResponse {
         predictions,
         desired_output: desired_output.clone(),
     })
@@ -56,6 +72,7 @@ async fn main() -> Result<()> {
             .app_data(data.clone())
             .wrap(Cors::permissive())
             .wrap(Logger::default())
+            .service(get_data)
             .service(get_health)
             .service(get_network)
             .service(post_predictions)

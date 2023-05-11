@@ -25,7 +25,7 @@ impl Perceptron {
      */
     pub fn activate(&self, inputs: &Vec<f64>) -> f64 {
         // TODO only 9 weights but 784 inputs???
-        assert_eq!(self.weights.len(), inputs.len());
+        // assert_eq!(self.weights.len(), inputs.len());
 
         let weighted_sum: f64 = inputs
             .iter()

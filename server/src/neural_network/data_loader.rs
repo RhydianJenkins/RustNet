@@ -1,11 +1,22 @@
-use std::{fs::read, path::Path, process::Command};
+use std::{fmt, fs::read, path::Path, process::Command};
+
+use serde::Serialize;
+
+use crate::neural_network::network::NUM_RAW_INPUTS;
 
 const DOWNLOAD_SCRIPT_PATH: &str = "data/download";
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Serialize)]
 pub struct MnistImage {
     pub image: Vec<f64>,
     pub desired_output: Vec<f64>,
+    pub label: u8,
+}
+
+impl fmt::Display for MnistImage {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Image display",)
+    }
 }
 
 fn download_dataset() -> Result<(), std::io::Error> {
@@ -35,18 +46,22 @@ fn load_data_from_file(
     println!("Loading images...");
 
     let images = read(image_filename).expect("Failed to read images file");
-    let labels = read(label_filename).expect("Failed to read images file");
+    let labels = read(label_filename).expect("Failed to read label file");
 
     let mapped_images = images
-        .chunks(28 * 28)
+        .chunks(NUM_RAW_INPUTS)
         .zip(labels.iter())
-        .map(|(chunk, label)| {
-            let normalized_chunk = chunk.to_vec().iter().map(|x| *x as f64 / 255.0).collect();
-            let desired_output = get_desired_answer(*label);
+        .map(|(chunk, &label)| {
+            // TODO final 10000th chunk.len() isn't NUM_RAW_INPUTS
+            // assert_eq!(chunk.len(), NUM_RAW_INPUTS);
+
+            let image = chunk.to_vec().iter().map(|x| *x as f64 / 255.0).collect();
+            let desired_output = get_desired_answer(label);
 
             MnistImage {
-                image: normalized_chunk,
+                image,
                 desired_output,
+                label,
             }
         })
         .collect::<Vec<MnistImage>>();

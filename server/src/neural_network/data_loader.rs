@@ -1,83 +1,92 @@
-use std::{fmt, fs::read, path::Path, process::Command};
-
+use byteorder::{BigEndian, ReadBytesExt};
+use flate2::read::GzDecoder;
 use serde::Serialize;
+use std::fs::File;
+use std::io::{Cursor, Read};
 
-use crate::neural_network::network::NUM_RAW_INPUTS;
+const DATA_DIR: &str = "data";
 
-const DOWNLOAD_SCRIPT_PATH: &str = "data/download";
-
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 pub struct MnistImage {
     pub image: Vec<f64>,
+    pub classification: u8,
     pub desired_output: Vec<f64>,
-    pub label: u8,
 }
 
-impl fmt::Display for MnistImage {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Image display",)
+#[derive(Debug)]
+struct MnistData {
+    sizes: Vec<i32>,
+    data: Vec<u8>,
+}
+
+impl MnistData {
+    fn new(f: &File) -> Result<MnistData, std::io::Error> {
+        let mut gz = GzDecoder::new(f);
+        let mut contents: Vec<u8> = Vec::new();
+        gz.read_to_end(&mut contents)?;
+        let mut r = Cursor::new(&contents);
+
+        let magic_number = r.read_i32::<BigEndian>()?;
+
+        let mut sizes: Vec<i32> = Vec::new();
+        let mut data: Vec<u8> = Vec::new();
+
+        match magic_number {
+            2049 => {
+                sizes.push(r.read_i32::<BigEndian>()?);
+            }
+            2051 => {
+                sizes.push(r.read_i32::<BigEndian>()?);
+                sizes.push(r.read_i32::<BigEndian>()?);
+                sizes.push(r.read_i32::<BigEndian>()?);
+            }
+            _ => panic!(),
+        }
+
+        r.read_to_end(&mut data)?;
+
+        Ok(MnistData { sizes, data })
     }
 }
 
-fn download_dataset() -> Result<(), std::io::Error> {
-    println!("Downloading MNIST dataset...");
+pub fn load_data(dataset_name: &str) -> Result<Vec<MnistImage>, std::io::Error> {
+    let labels_filename = format!("{}/{}-labels-idx1-ubyte.gz", DATA_DIR, dataset_name);
+    let images_filename = format!("{}/{}-images-idx3-ubyte.gz", DATA_DIR, dataset_name);
+    let label_data = &MnistData::new(&(File::open(labels_filename))?)?;
+    let images_data = &MnistData::new(&(File::open(images_filename))?)?;
+    let mut images: Vec<Vec<f64>> = Vec::new();
+    let image_shape = (images_data.sizes[1] * images_data.sizes[2]) as usize;
 
-    let download = Command::new(DOWNLOAD_SCRIPT_PATH).output()?;
-    if !download.status.success() {
-        panic!(
-            "Failed to download MNIST dataset: {}",
-            String::from_utf8_lossy(&download.stderr)
-        );
+    for i in 0..images_data.sizes[0] as usize {
+        let start = i * image_shape;
+        let image_data = images_data.data[start..start + image_shape].to_vec();
+        let image_data: Vec<f64> = image_data.into_iter().map(|x| x as f64 / 255.).collect();
+        images.push(image_data);
     }
 
-    Ok(())
+    let classifications: Vec<u8> = label_data.data.clone();
+
+    let desired_outputs = classifications.iter().map(|&x| get_desired_answer(x));
+
+    let mut ret: Vec<MnistImage> = Vec::new();
+
+    for ((image, &classification), desired_output) in images
+        .into_iter()
+        .zip(&classifications)
+        .zip(desired_outputs)
+    {
+        ret.push(MnistImage {
+            image,
+            classification,
+            desired_output,
+        })
+    }
+
+    Ok(ret)
 }
 
 fn get_desired_answer(input: u8) -> Vec<f64> {
     (0..10)
         .map(|x| if x == input { 1.0 } else { 0.0 })
-        .collect::<Vec<f64>>()
-}
-
-fn load_data_from_file(
-    image_filename: &str,
-    label_filename: &str,
-) -> Result<Vec<MnistImage>, std::io::Error> {
-    println!("Loading images...");
-
-    let images = read(image_filename).expect("Failed to read images file");
-    let labels = read(label_filename).expect("Failed to read label file");
-
-    let mapped_images = images
-        .chunks(NUM_RAW_INPUTS)
-        .zip(labels.iter())
-        .map(|(chunk, &label)| {
-            // TODO final 10000th chunk.len() isn't NUM_RAW_INPUTS
-            // assert_eq!(chunk.len(), NUM_RAW_INPUTS);
-
-            let image = chunk.to_vec().iter().map(|x| *x as f64 / 255.0).collect();
-            let desired_output = get_desired_answer(label);
-
-            MnistImage {
-                image,
-                desired_output,
-                label,
-            }
-        })
-        .collect::<Vec<MnistImage>>();
-
-    Ok(mapped_images)
-}
-
-pub fn load_dataset(dataset_name: &str) -> Result<Vec<MnistImage>, std::io::Error> {
-    let images_filename = format!("{}-images-idx3-ubyte", dataset_name);
-    let labels_filename = format!("{}-labels-idx1-ubyte", dataset_name);
-
-    if !Path::new(&images_filename).exists() {
-        download_dataset().expect("Failed to download MNIST dataset");
-    }
-
-    let mnist_images = load_data_from_file(&images_filename, &labels_filename)?;
-
-    Ok(mnist_images)
+        .collect()
 }

@@ -2,39 +2,16 @@ import { Component, onMount } from "solid-js";
 
 import styles from "./App.module.css";
 
-const CANVAS_WIDTH = 512;
-const CANVAS_HEIGHT = 512;
+const SCALE = 10;
+const CANVAS_WIDTH = 28;
+const CANVAS_HEIGHT = 28;
+const GET_IMAGE_ENDPOINT = "http://localhost:8080/data/3";
 
-const NUM_POINTS = 100;
-
-type Point = {
-    x: number;
-    y: number;
-};
-
-const generatePoint = (): Point => {
-  const x = Math.random() * CANVAS_WIDTH;
-  const y = Math.random() * CANVAS_HEIGHT;
-  return {x, y};
-};
-
-const generatePoints = (ctx: CanvasRenderingContext2D): Point[] => {
-  const points = [];
-  for (let i = 0; i < NUM_POINTS; i++) {
-    points.push(drawPoint(ctx));
-  }
-  return points;
-};
-
-const drawPoint = (ctx: CanvasRenderingContext2D): Point => {
-  const {x, y} = generatePoint();
-
-  ctx.fillStyle = "red";
-  ctx.fillRect(x, y, 10, 10);
-  ctx.stroke();
-
-  return {x, y};
-};
+type ImageType = {
+    desired_output: number[];
+    label: string;
+    image: number[];
+}
 
 const initCanvas = (): CanvasRenderingContext2D => {
   const canvas = document.getElementById("canvas") as HTMLCanvasElement|null;
@@ -44,8 +21,8 @@ const initCanvas = (): CanvasRenderingContext2D => {
   }
 
   const ctx = canvas.getContext("2d");
-  canvas.width = CANVAS_WIDTH;
-  canvas.height = CANVAS_HEIGHT;
+  canvas.width = CANVAS_WIDTH * SCALE;
+  canvas.height = CANVAS_HEIGHT * SCALE;
   canvas.setAttribute("style", "border: 2px solid white");
 
   if (!ctx) {
@@ -55,16 +32,25 @@ const initCanvas = (): CanvasRenderingContext2D => {
   return ctx;
 };
 
+const fetchImage = async(): Promise<ImageType> => {
+  const response = await fetch(GET_IMAGE_ENDPOINT);
+  return await response.json();
+};
+
+const drawImage = (ctx: CanvasRenderingContext2D, imageData: ImageType): void => {
+  imageData.image.forEach((pixel, index) => {
+    ctx.fillStyle = `rgba(0, 0, 0, ${pixel})`;
+    const x = index % CANVAS_WIDTH * SCALE;
+    const y = index / CANVAS_HEIGHT * SCALE;
+    ctx.fillRect(x, y, SCALE, SCALE);
+  });
+};
+
 const App: Component = () => {
   onMount(async() => {
     const ctx = initCanvas();
-    const points = generatePoints(ctx);
-    await fetch("http://localhost:8080/test", {
-      method: "POST",
-      body: JSON.stringify({
-        points,
-      }),
-    });
+    const imageData = await fetchImage();
+    drawImage(ctx, imageData);
   });
 
   return (

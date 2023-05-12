@@ -13,3 +13,7 @@ rand = "0.8.5"
 nalgebra = "0.32.2"
 indicatif = "0.17.3"
 mnist = "0.5.0"
+blas-src = { version = "0.2.0", default-features = false, features = ["openblas"] }
+openblas-src = { version = "0.6.0", default-features = false, features = ["cblas", "system"] }
+flate2 = "1.0"
+byteorder = "1.3"

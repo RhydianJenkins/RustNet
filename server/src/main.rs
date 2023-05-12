@@ -9,7 +9,7 @@ use neural_network::{generate_predictions, generate_trained_network};
 use serde::Serialize;
 use std::io::Result;
 
-use crate::neural_network::data_loader::load_dataset;
+use crate::neural_network::data_loader::load_data;
 
 struct AppState {
     network: Network,
@@ -34,7 +34,7 @@ async fn get_network(data: Data<AppState>) -> impl Responder {
 #[get("/data/{index}")]
 async fn get_data(path: Path<usize>) -> impl Responder {
     let index = path.into_inner();
-    let training_dataset = load_dataset("t10k").unwrap();
+    let training_dataset = load_data("t10k").unwrap();
 
     if index >= training_dataset.len() {
         return web::Json(Option::None);
@@ -49,7 +49,7 @@ async fn get_data(path: Path<usize>) -> impl Responder {
 
 #[post("/predictions")]
 async fn post_predictions(data: Data<AppState>) -> impl Responder {
-    let training_dataset = load_dataset("t10k").unwrap();
+    let training_dataset = load_data("t10k").unwrap();
     let mnist_image = training_dataset.get(1).unwrap();
     let inputs = &mnist_image.image;
     let desired_output = &mnist_image.desired_output;

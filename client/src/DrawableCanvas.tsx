@@ -4,23 +4,21 @@ const SCALE = 10;
 const CANVAS_WIDTH = 28;
 const CANVAS_HEIGHT = 28;
 
+type PredictionResponseType = {
+    hidden_1_outputs: number[],
+    hidden_2_outputs: number[],
+    outputs: number[],
+}
+
 type CoordinateType = {
     x: number;
     y: number;
 }
 
-type ImageType = {
-    desired_output?: number[];
-    label?: string;
-    image: number[];
-}
-
 let canvas: HTMLCanvasElement;
 let ctx: CanvasRenderingContext2D;
-
 let smallCanvas: HTMLCanvasElement;
 let smallCtx: CanvasRenderingContext2D;
-
 let coord: CoordinateType = { x: 0, y: 0 };
 
 const initCanvas = () => {
@@ -32,7 +30,7 @@ const initCanvas = () => {
 
   canvas.width = CANVAS_WIDTH * SCALE;
   canvas.height = CANVAS_HEIGHT * SCALE;
-  canvas.setAttribute("style", "border: 2px solid white");
+  canvas.setAttribute("style", "border: 1px solid white");
 
   ctx = canvas.getContext("2d")!;
 
@@ -55,7 +53,7 @@ const initSmallCanvas = () => {
 
   smallCanvas.width = CANVAS_WIDTH;
   smallCanvas.height = CANVAS_HEIGHT;
-  smallCanvas.setAttribute("style", "border: 2px solid green");
+  smallCanvas.setAttribute("style", "border: 1px solid white");
 
   smallCtx = smallCanvas.getContext("2d")!;
 
@@ -65,7 +63,7 @@ const initSmallCanvas = () => {
 
   smallCtx.lineWidth = 1;
   smallCtx.lineCap = "round";
-  smallCtx.strokeStyle = "#ff0000";
+  smallCtx.strokeStyle = "#000";
   smallCtx.imageSmoothingQuality = "low";
 };
 
@@ -100,13 +98,44 @@ const start = (event: MouseEvent): void => {
 
 const stop = (): void => {
   document.removeEventListener("mousemove", draw);
-  getSmallCanvasData();
 };
 
-const getSmallCanvasData = () => {
-  const smallImageData = smallCtx.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+const clearCanvas = (): void => {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  smallCtx.clearRect(0, 0, smallCanvas.width, smallCanvas.height);
+};
 
-  console.log(smallImageData);
+const getSmallCanvasData = (): number[] => {
+  const { data } = smallCtx.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+  const smallImageData = [];
+
+  for (let i = 0; i < data.length; i += 4) {
+    const avgRbgValues = (data[i] + data[i + 1] + data[i + 2]);
+    const normalized = avgRbgValues / 255;
+    smallImageData.push(normalized);
+  }
+
+  return smallImageData;
+};
+
+const fetchPredictions = async(inputs: number[]) => {
+  const response = await fetch("http://localhost:8080/predictions", {
+    method: "POST",
+    body: JSON.stringify({ inputs }),
+  });
+  const predictions = await response.json() as PredictionResponseType;
+
+  let highestPrediction = 0;
+  let highestPredictionIndex = 0;
+
+  predictions.outputs.forEach((prediction: number, index: number) => {
+    if (prediction > highestPrediction) {
+      highestPrediction = prediction;
+      highestPredictionIndex = index;
+    }
+  });
+
+  document.getElementById("prediction-output")!.innerText = `Prediction: ${highestPredictionIndex}`;
 };
 
 const DrawableCanvas = () => {
@@ -127,6 +156,11 @@ const DrawableCanvas = () => {
     <>
       <canvas id="drawable-canvas" />
       <canvas id="small-canvas" />
+      <span>
+        <button onClick={clearCanvas}>Clear</button>
+        <button onClick={() => fetchPredictions(getSmallCanvasData())}>Predict</button>
+      </span>
+      <p id="prediction-output" />
     </>
   );
 };

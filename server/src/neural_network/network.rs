@@ -31,14 +31,6 @@ impl Network {
         }
     }
 
-    /*
-     * For every input, multiply that input by its weight.
-     * Sum all of the weighted inputs.
-     * Compute the output of the perceptron based on that sum passed through an activation function
-     * Repeat for every perceptron in the network.
-     * Return the output of the last perceptron in the network.
-     * This is the prediction.
-     */
     pub fn feed_forward(&self, inputs: &Vec<f64>) -> (Vec<f64>, Vec<f64>, Vec<f64>) {
         let mut input_layer_results: Vec<f64> = vec![];
         let mut hidden_layer_results: Vec<f64> = vec![];
@@ -69,18 +61,6 @@ impl Network {
         )
     }
 
-    /*
-     * for every node in the output layer
-     *   calculate the error signal
-     * end
-     *
-     * for all hidden layers
-     *   for every node in the layer
-     *     1. Calculate the node's signal error
-     *     2. Update each node's weight in the network
-     *   end
-     * end
-     */
     fn back_propagate(
         &mut self,
         raw_input: &Vec<f64>,
@@ -136,7 +116,6 @@ impl Network {
 
     pub fn train(&mut self, training_dataset: &Vec<MnistImage>) {
         println!("Training...");
-        // let num_training_examples = training_dataset.len() - 1;
         let pb = ProgressBar::new((training_dataset.len() - 1).try_into().unwrap());
 
         training_dataset.iter().for_each(|training_data| {

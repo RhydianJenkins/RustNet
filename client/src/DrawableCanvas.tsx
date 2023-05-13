@@ -109,9 +109,9 @@ const getSmallCanvasData = (): number[] => {
   const { data } = smallCtx.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   const smallImageData = [];
 
-  for (let i = 0; i < data.length; i += 4) {
-    const avgRbgValues = (data[i] + data[i + 1] + data[i + 2]);
-    const normalized = avgRbgValues / 255;
+  for (let i = 3; i < data.length; i += 4) {
+    const alphaValue = data[i];
+    const normalized = alphaValue / 255;
     smallImageData.push(normalized);
   }
 
@@ -121,6 +121,9 @@ const getSmallCanvasData = (): number[] => {
 const fetchPredictions = async(inputs: number[]) => {
   const response = await fetch("http://localhost:8080/predictions", {
     method: "POST",
+    headers: {
+      ["Content-Type"]: "application/json",
+    },
     body: JSON.stringify({ inputs }),
   });
   const predictions = await response.json() as PredictionResponseType;

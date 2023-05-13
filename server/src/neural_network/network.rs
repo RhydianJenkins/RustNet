@@ -5,7 +5,7 @@ use serde::Serialize;
 
 pub const NUM_RAW_INPUTS: usize = 784;
 const NUM_HIDDEN_NEURONS: usize = 16;
-const NUM_OUTPUTS: usize = 9;
+const NUM_OUTPUTS: usize = 10;
 
 #[derive(Clone, Debug, Serialize)]
 pub struct Network {
@@ -48,19 +48,19 @@ impl Network {
             let output = perceptron.activate(inputs);
             input_layer_results.push(output);
         }
-        assert_eq!(input_layer_results.len(), NUM_HIDDEN_NEURONS);
+        debug_assert_eq!(input_layer_results.len(), NUM_HIDDEN_NEURONS);
 
         for perceptron in &self.hidden_layer {
             let output = perceptron.activate(&input_layer_results);
             hidden_layer_results.push(output);
         }
-        assert_eq!(hidden_layer_results.len(), NUM_HIDDEN_NEURONS);
+        debug_assert_eq!(hidden_layer_results.len(), NUM_HIDDEN_NEURONS);
 
         for perceptron in &self.output_layer {
             let output = perceptron.activate(&hidden_layer_results);
             output_layer_results.push(output);
         }
-        assert_eq!(output_layer_results.len(), NUM_OUTPUTS);
+        debug_assert_eq!(output_layer_results.len(), NUM_OUTPUTS);
 
         (
             input_layer_results,
@@ -135,9 +135,9 @@ impl Network {
     }
 
     pub fn train(&mut self, training_dataset: &Vec<MnistImage>) {
-        let num_training_examples = training_dataset.len() - 1;
-        println!("Training with {} iterations...", num_training_examples);
-        let pb = ProgressBar::new(num_training_examples.try_into().unwrap());
+        println!("Training...");
+        // let num_training_examples = training_dataset.len() - 1;
+        let pb = ProgressBar::new((training_dataset.len() - 1).try_into().unwrap());
 
         training_dataset.iter().for_each(|training_data| {
             self.train_once(training_data);

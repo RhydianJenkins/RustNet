@@ -4,21 +4,25 @@ use actix_cors::Cors;
 use actix_web::main;
 use actix_web::web::{Data, Path};
 use actix_web::{get, middleware::Logger, post, web, App, HttpResponse, HttpServer, Responder};
+use neural_network::data_loader::load_data;
+use neural_network::generate_trained_network;
 use neural_network::network::Network;
-use neural_network::{generate_predictions, generate_trained_network};
-use serde::Serialize;
-use std::io::Result;
-
-use crate::neural_network::data_loader::load_data;
+use serde::{Deserialize, Serialize};
 
 struct AppState {
     network: Network,
 }
 
+#[derive(Debug, Deserialize)]
+struct PredictionRequest {
+    inputs: Vec<f64>,
+}
+
 #[derive(Serialize)]
 struct PredictionResponse {
-    predictions: Vec<f64>,
-    desired_output: Vec<f64>,
+    hidden_1_outputs: Vec<f64>,
+    hidden_2_outputs: Vec<f64>,
+    outputs: Vec<f64>,
 }
 
 #[get("/")]
@@ -48,21 +52,21 @@ async fn get_data(path: Path<usize>) -> impl Responder {
 }
 
 #[post("/predictions")]
-async fn post_predictions(data: Data<AppState>) -> impl Responder {
-    let training_dataset = load_data("t10k").unwrap();
-    let mnist_image = training_dataset.get(1).unwrap();
-    let inputs = &mnist_image.image;
-    let desired_output = &mnist_image.desired_output;
-    let predictions = generate_predictions(&data.network, inputs).unwrap();
+async fn post_predictions(
+    request: web::Json<PredictionRequest>,
+    data: Data<AppState>,
+) -> impl Responder {
+    let (hidden_1_outputs, hidden_2_outputs, outputs) = data.network.feed_forward(&request.inputs);
 
     web::Json(PredictionResponse {
-        predictions,
-        desired_output: desired_output.clone(),
+        hidden_1_outputs,
+        hidden_2_outputs,
+        outputs,
     })
 }
 
 #[main]
-async fn main() -> Result<()> {
+async fn main() -> Result<(), std::io::Error> {
     let data = Data::new(AppState {
         network: generate_trained_network(),
     });

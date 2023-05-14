@@ -14,3 +14,8 @@ button {
     margin: 10px;
     padding: 10px;
 }
+
+.networkDetails {
+    display: flex;
+    justify-content: space-evenly;
+}

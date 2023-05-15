@@ -24,8 +24,7 @@ impl Perceptron {
      * Activate the weighted sum with a sigmoid function.
      */
     pub fn activate(&self, inputs: &Vec<f64>) -> f64 {
-        // TODO only 9 weights but 784 inputs???
-        // assert_eq!(self.weights.len(), inputs.len());
+        debug_assert_eq!(self.weights.len(), inputs.len());
 
         let weighted_sum: f64 = inputs
             .iter()
@@ -36,20 +35,22 @@ impl Perceptron {
         sigmoid(weighted_sum + self.bias)
     }
 
-    pub fn update_weights(&mut self, error_signals: &Vec<f64>, prev_layer_results: &Vec<f64>) {
+    pub fn update_weights(&mut self, average_error: f64, prev_layer_results: &Vec<f64>) {
         let new_weights = self
             .weights
             .iter()
-            .zip(error_signals.iter())
             .zip(prev_layer_results.iter())
-            .map(|((weight, prev_layer_result), error)| {
-                let new_weight = weight - (LEARNING_RATE * error * prev_layer_result);
+            .map(|(weight, prev_layer_result)| {
+                let new_weight = weight - (LEARNING_RATE * average_error * prev_layer_result);
 
                 new_weight
             })
             .collect::<Vec<f64>>();
 
         // TODO update bias of prev layer
+        // TODO zippnig error signals with weights of prev layer makes `new_weights` 10 long
+
+        debug_assert_eq!(new_weights.len(), self.weights.len());
 
         self.weights = new_weights;
     }

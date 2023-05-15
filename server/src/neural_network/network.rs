@@ -96,21 +96,24 @@ impl Network {
         error_signal
     }
 
-    fn update_output_weights(&mut self, error_signal: &Vec<f64>, prev_layer_results: &Vec<f64>) {
+    fn update_output_weights(&mut self, error_signals: &Vec<f64>, prev_layer_results: &Vec<f64>) {
+        let average_error = error_signals.iter().sum::<f64>() / error_signals.len() as f64;
         for perceptron in &mut self.output_layer {
-            perceptron.update_weights(error_signal, prev_layer_results);
+            perceptron.update_weights(average_error, prev_layer_results);
         }
     }
 
-    fn update_hidden_weights(&mut self, error_signal: &Vec<f64>, prev_layer_results: &Vec<f64>) {
+    fn update_hidden_weights(&mut self, error_signals: &Vec<f64>, prev_layer_results: &Vec<f64>) {
+        let average_error = error_signals.iter().sum::<f64>() / error_signals.len() as f64;
         for perceptron in &mut self.hidden_layer {
-            perceptron.update_weights(error_signal, prev_layer_results);
+            perceptron.update_weights(average_error, prev_layer_results);
         }
     }
 
-    fn update_input_weights(&mut self, error_signal: &Vec<f64>, prev_layer_results: &Vec<f64>) {
+    fn update_input_weights(&mut self, error_signals: &Vec<f64>, prev_layer_results: &Vec<f64>) {
+        let average_error = error_signals.iter().sum::<f64>() / error_signals.len() as f64;
         for perceptron in &mut self.input_layer {
-            perceptron.update_weights(error_signal, prev_layer_results);
+            perceptron.update_weights(average_error, prev_layer_results);
         }
     }
 

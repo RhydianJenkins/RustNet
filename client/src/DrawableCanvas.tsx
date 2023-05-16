@@ -3,7 +3,7 @@ import { onCleanup, onMount } from "solid-js";
 const SCALE = 10;
 const CANVAS_WIDTH = 28;
 const CANVAS_HEIGHT = 28;
-const LINE_WIDTH = 20;
+const LINE_WIDTH = 30;
 
 type PredictionResponseType = {
     hidden_1_outputs: number[],

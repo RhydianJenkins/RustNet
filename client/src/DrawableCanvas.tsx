@@ -3,6 +3,7 @@ import { onCleanup, onMount } from "solid-js";
 const SCALE = 10;
 const CANVAS_WIDTH = 28;
 const CANVAS_HEIGHT = 28;
+const LINE_WIDTH = 20;
 
 type PredictionResponseType = {
     hidden_1_outputs: number[],
@@ -38,7 +39,7 @@ const initCanvas = () => {
     throw Error("Could not get canvas context");
   }
 
-  ctx.lineWidth = 15;
+  ctx.lineWidth = LINE_WIDTH;
   ctx.lineCap = "round";
   ctx.strokeStyle = "#000";
   ctx.imageSmoothingQuality = "low";

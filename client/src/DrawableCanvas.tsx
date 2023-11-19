@@ -1,4 +1,4 @@
-import { onCleanup, onMount } from "solid-js";
+import { onCleanup, createSignal, onMount, Show } from "solid-js";
 
 const SCALE = 10;
 const CANVAS_WIDTH = 28;
@@ -15,6 +15,12 @@ type CoordinateType = {
     x: number;
     y: number;
 }
+
+type ExampleDataType = {
+    classification: number;
+    desired_output: number[];
+    image: number[];
+};
 
 let canvas: HTMLCanvasElement;
 let ctx: CanvasRenderingContext2D;
@@ -41,7 +47,7 @@ const initCanvas = () => {
 
   ctx.lineWidth = LINE_WIDTH;
   ctx.lineCap = "round";
-  ctx.strokeStyle = "#000";
+  ctx.strokeStyle = "#fff";
   ctx.imageSmoothingQuality = "low";
 };
 
@@ -64,7 +70,7 @@ const initSmallCanvas = () => {
 
   smallCtx.lineWidth = 1;
   smallCtx.lineCap = "round";
-  smallCtx.strokeStyle = "#000";
+  smallCtx.strokeStyle = "#fff";
   smallCtx.imageSmoothingQuality = "low";
 };
 
@@ -99,11 +105,6 @@ const start = (event: MouseEvent): void => {
 
 const stop = (): void => {
   document.removeEventListener("mousemove", draw);
-};
-
-const clearCanvas = (): void => {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  smallCtx.clearRect(0, 0, smallCanvas.width, smallCanvas.height);
 };
 
 const getSmallCanvasData = (): number[] => {
@@ -142,10 +143,21 @@ const fetchPredictions = async(inputs: number[]) => {
   document.getElementById("prediction-output")!.innerText = `Prediction: ${highestPredictionIndex}`;
 };
 
+const loadData = async(dataIndex: number): Promise<ExampleDataType> => {
+  const response = await fetch(`http://localhost:8080/data/${dataIndex}`);
+  const responseJson = await response.json();
+  return responseJson;
+};
+
 const DrawableCanvas = () => {
   onMount(async() => {
     initCanvas();
     initSmallCanvas();
+
+    const randomDataIndex = Math.floor(Math.random() * 255);
+    const loadedExampleData = await loadData(randomDataIndex);
+    renderExampleData(loadedExampleData);
+    predict();
 
     document.addEventListener("mousedown", start);
     document.addEventListener("mouseup", stop);
@@ -156,13 +168,46 @@ const DrawableCanvas = () => {
     document.removeEventListener("mouseup", stop);
   });
 
+  const clearCanvas = (): void => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    smallCtx.clearRect(0, 0, smallCanvas.width, smallCanvas.height);
+  };
+
+  const predict = async() => {
+    const canvasData = getSmallCanvasData();
+    fetchPredictions(canvasData);
+  };
+
+  const renderExampleData = ({ image }: ExampleDataType) => {
+    clearCanvas();
+
+    const values = image.map((pixel) => Array(4).fill(pixel * 255)).flat();
+    const clampedImage = new Uint8ClampedArray(values);
+    const smallImageData = new ImageData(clampedImage, CANVAS_WIDTH, CANVAS_HEIGHT);
+    smallCtx.putImageData(smallImageData, 0, 0);
+
+    const scaledCanvas = document.createElement("canvas") as HTMLCanvasElement;
+    scaledCanvas.height = CANVAS_HEIGHT;
+    scaledCanvas.width = CANVAS_WIDTH;
+
+    const scaledCtx = scaledCanvas.getContext("2d");
+    if (!scaledCtx) {
+      throw Error("Could not get scaled canvas context");
+    }
+
+    scaledCtx.putImageData(smallImageData, 0, 0);
+    ctx.scale(SCALE, SCALE);
+    ctx.drawImage(scaledCanvas, 0, 0);
+    ctx.scale(1 / SCALE, 1 / SCALE);
+  };
+
   return (
     <>
       <canvas id="drawable-canvas" />
       <canvas id="small-canvas" />
       <span>
         <button onClick={clearCanvas}>Clear</button>
-        <button onClick={() => fetchPredictions(getSmallCanvasData())}>Predict</button>
+        <button onClick={predict}>Predict</button>
       </span>
       <p id="prediction-output" />
     </>

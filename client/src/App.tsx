@@ -29,7 +29,7 @@ const App: Component = () => {
   const [ networkDetails, setNetworkDetails ] = createSignal<NetworkDetailsType>({} as NetworkDetailsType);
 
   onMount(async() => {
-    const netwokrDetails: NetworkDetailsType = await fetchNetworkDetails();
+    const netwokrDetails = await fetchNetworkDetails();
     setNetworkDetails(netwokrDetails);
   });
 

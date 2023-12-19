@@ -1,4 +1,4 @@
-import { onCleanup, createSignal, onMount, Show } from "solid-js";
+import { onCleanup, onMount } from "solid-js";
 
 const SCALE = 10;
 const CANVAS_WIDTH = 28;

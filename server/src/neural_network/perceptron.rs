@@ -1,9 +1,6 @@
-// use std::f64::consts::E;
-
+use crate::neural_network::network::{LEARNING_RATE, STARTING_BIAS};
 use serde::Serialize;
-
-const STARTING_BIAS: f64 = 1.0;
-const LEARNING_RATE: f64 = 0.01;
+use std::f64::consts::E;
 
 #[derive(Clone, Debug, Serialize)]
 pub struct Perceptron {
@@ -64,7 +61,9 @@ fn calculate_new_bias(prev_bias: f64, average_error: f64, perceptron_output: f64
 }
 
 fn sigmoid(x: f64) -> f64 {
-    1.0 / (1.0 + (-x).exp())
+    let result = 1.0 / (1.0 + E.powf(-x));
+
+    result
 }
 
 #[cfg(test)]

@@ -1,4 +1,5 @@
 import { onCleanup, onMount } from "solid-js";
+import Chart from "chart.js/auto";
 
 const SCALE = 10;
 const CANVAS_WIDTH = 28;
@@ -23,6 +24,7 @@ type ExampleDataType = {
 };
 
 let canvas: HTMLCanvasElement;
+let chart: Chart;
 let ctx: CanvasRenderingContext2D;
 let smallCanvas: HTMLCanvasElement;
 let smallCtx: CanvasRenderingContext2D;
@@ -140,7 +142,34 @@ const fetchPredictions = async(inputs: number[]) => {
     }
   });
 
-  document.getElementById("prediction-output")!.innerText = `Prediction: ${highestPredictionIndex}`;
+  drawPredictionChart(predictions, highestPredictionIndex);
+};
+
+const drawPredictionChart = ({ outputs }: PredictionResponseType, highestPredictionIndex: number) => {
+  if (chart) {
+    chart.data.datasets[0].data = outputs;
+    chart.data.datasets[0].label = `Prediction: ${highestPredictionIndex}`;
+    chart.update();
+    return;
+  }
+
+  chart = new Chart(document.getElementById("prediction-chart") as HTMLCanvasElement, {
+    type: "bar",
+    data: {
+      labels: Array.from(Array(10).keys()),
+      datasets: [{
+        label: `Prediction: ${highestPredictionIndex}`,
+        data: outputs,
+      }],
+    },
+    options: {
+      scales: {
+        y: {
+          beginAtZero: true,
+        },
+      },
+    },
+  });
 };
 
 const loadData = async(dataIndex: number): Promise<ExampleDataType> => {
@@ -209,7 +238,7 @@ const DrawableCanvas = () => {
         <button onClick={clearCanvas}>Clear</button>
         <button onClick={predict}>Predict</button>
       </span>
-      <p id="prediction-output" />
+      <canvas id="prediction-chart" style={{"width":"100%","max-width":"600px","max-height":"255px"}} />
     </>
   );
 };

@@ -4,7 +4,7 @@ use indicatif::ProgressBar;
 use serde::Serialize;
 
 pub const NUM_RAW_INPUTS: usize = 784;
-const NUM_HIDDEN_NEURONS: usize = 64;
+const NUM_HIDDEN_NEURONS: usize = 16;
 const NUM_OUTPUTS: usize = 10;
 
 #[derive(Clone, Debug, Serialize)]

@@ -1,4 +1,4 @@
-use std::f64::consts::E;
+// use std::f64::consts::E;
 
 use serde::Serialize;
 
@@ -30,7 +30,7 @@ impl Perceptron {
             .iter()
             .zip(self.weights.iter())
             .map(|(input, weight)| input * weight)
-            .sum::<f64>();
+            .sum();
 
         sigmoid(weighted_sum + self.bias)
     }
@@ -47,8 +47,8 @@ impl Perceptron {
             })
             .collect::<Vec<f64>>();
 
-        // TODO update bias of prev layer
-        // TODO zippnig error signals with weights of prev layer makes `new_weights` 10 long
+        let perceptron_output = self.activate(prev_layer_results);
+        self.bias = calculate_new_bias(self.bias, average_error, perceptron_output);
 
         debug_assert_eq!(new_weights.len(), self.weights.len());
 
@@ -56,8 +56,15 @@ impl Perceptron {
     }
 }
 
+fn calculate_new_bias(prev_bias: f64, average_error: f64, perceptron_output: f64) -> f64 {
+    let derivative = perceptron_output * (1.0 - perceptron_output);
+    let new_bias = prev_bias + LEARNING_RATE * average_error * derivative;
+
+    new_bias
+}
+
 fn sigmoid(x: f64) -> f64 {
-    1.0 / (1.0 + E.powf(-x))
+    1.0 / (1.0 + (-x).exp())
 }
 
 #[cfg(test)]

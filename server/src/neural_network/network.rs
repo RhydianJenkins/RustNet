@@ -3,10 +3,11 @@ use super::{perceptron::Perceptron, random_float_generator::gen_random_floats};
 use indicatif::ProgressBar;
 use serde::Serialize;
 
-pub const STARTING_BIAS: f64 = 0.01;
-pub const LEARNING_RATE: f64 = 0.001;
+pub const STARTING_BIAS: f64 = 0.0;
+pub const LEARNING_RATE: f64 = 0.00001;
 const NUM_RAW_INPUTS: usize = 784;
 const NUM_TO_TRAIN: usize = 50_000;
+const NUM_IN_BATCH: usize = 500;
 const NUM_HIDDEN_NEURONS: usize = 16;
 const NUM_OUTPUTS: usize = 10;
 
@@ -121,25 +122,39 @@ impl Network {
     }
 
     pub fn train(&mut self, training_dataset: &Vec<MnistImage>) {
-        println!("Training...");
+        let num_batches = NUM_TO_TRAIN / NUM_IN_BATCH;
+
         let data = if training_dataset.len() < NUM_TO_TRAIN {
             training_dataset
         } else {
             &training_dataset[0..NUM_TO_TRAIN]
         };
 
-        let pb = ProgressBar::new((data.len() - 1).try_into().unwrap());
+        println!("Training in {num_batches} batches...");
 
-        data.iter().for_each(|training_data| {
+        for i in 0..num_batches {
+            let start_offset = NUM_IN_BATCH * i;
+            let end_offset = start_offset + NUM_IN_BATCH;
+            let batch = &data[start_offset..end_offset];
+
+            self.train_on_batch(batch);
+        }
+
+        self.trained = true;
+
+        println!("Training complete.");
+    }
+
+    fn train_on_batch(&mut self, training_dataset: &[MnistImage]) {
+        let pb = ProgressBar::new((training_dataset.len() - 1).try_into().unwrap());
+
+        training_dataset.iter().for_each(|training_data| {
             self.train_once(training_data);
 
             pb.inc(1);
         });
 
-        self.trained = true;
-
-        pb.finish_with_message("Done");
-        println!("Training complete.");
+        pb.finish_with_message("Batch complete.");
     }
 
     fn train_once(&mut self, training_data: &MnistImage) {
